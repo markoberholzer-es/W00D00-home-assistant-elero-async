@@ -1,0 +1,90 @@
+{
+    "entity": {
+        "cover": {
+            "elero": {
+                "name": {
+                    "channel": "Kanal"
+                },
+                "state": {
+                    "intermediate": "Zwischenpos.",
+                    "stopped": "Gestoppt",
+                    "ventilation_tilt": "Lüftung/Kippe",
+                    "undefined": "Unbekannt"
+                }
+            }
+        }
+    },
+    "config": {
+        "flow_title": "{model} ({serial})",
+        "step": {
+            "user": {
+                "title": "Elero Sender Einrichtung",
+                "description": "Konfigurieren Sie Ihren Elero Sender.",
+                "data": {
+                    "name": "Sendername",
+                    "address": "Senderadresse",
+                    "timeout": "Zeitüberschreitung (Sek.)",
+                    "baud_rate": "Baudrate",
+                    "byte_size": "Datenbits",
+                    "parity": "Parität",
+                    "stop_bits": "Stoppbits"
+                }
+            },
+            "channels": {
+                "title": "Kanal {channel} konfigurieren",
+                "data": {
+                    "name": "Kanal",
+                    "device_class": "Geräteklasse",
+                    "supported_features": "Unterstützte Funktionen"
+                }
+            },
+            "usb_confirm": {
+                "title": "Elero Transmitter",
+                "description": "Erfolgreich mit Transmitter verbunden.\nSie werden nun durch die Kanal-Konfiguration geführt."
+            }
+        },
+        "error": {
+            "address_exists": "Ein Sender mit dieser Adresse existiert bereits.",
+            "unknown": "Unbekannter Fehler aufgetreten.",
+            "connection_error": "Verbindungsfehler. Stellen Sie sicher, dass das Gerät angeschlossen ist und die Einstellungen korrekt sind."
+        }
+    },
+    "selector": {
+        "supported_features": {
+            "options": {
+                "close_tilt": "Kippen schließen",
+                "down": "Ab",
+                "open_tilt": "Kippen öffnen",
+                "set_position": "Position setzen",
+                "set_tilt_position": "Kipp-Position setzen",
+                "stop_tilt": "Kippen stoppen",
+                "stop": "Stopp",
+                "up": "Auf"
+            }
+        },
+        "device_class": {
+            "options": {
+                "blind": "Jalousie",
+                "shade": "Markise",
+                "shutter": "Rollladen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Serielle Konfiguration",
+                "data": {
+                    "baud_rate": "Baudrate",
+                    "byte_size": "Datenbits",
+                    "parity": "Parität",
+                    "stop_bits": "Stoppbits",
+                    "timeout": "Timeout (Sekunden)"
+                }
+            }
+        }
+    },
+    "common": {
+        "default_channel_name": "Kanal"
+    }
+}

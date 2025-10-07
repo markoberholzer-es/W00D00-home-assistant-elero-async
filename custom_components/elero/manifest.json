@@ -1,0 +1,21 @@
+{
+    "domain": "elero",
+    "version": "0.1.0",
+    "name": "Elero",
+    "documentation": "https://github.com/W00D00/home-assistant-elero-async",
+    "dependencies": [],
+    "requirements": [
+        "pyserial>=3.4"
+    ],
+    "codeowners": [
+        "@W00D00"
+    ],
+    "config_flow": true,
+    "usb": [
+        {
+            "vid": "0403",
+            "pid": "6001",
+            "manufacturer": "*elero*"
+        }
+    ]
+}
