@@ -1,0 +1,90 @@
+{
+    "entity": {
+        "cover": {
+            "elero": {
+                "name": {
+                    "channel": "Channel"
+                },
+                "state": {
+                    "intermediate": "Vent",
+                    "stopped": "Stopped",
+                    "ventilation_tilt": "Tilted",
+                    "undefined": "Undefined"
+                }
+            }
+        }
+    },
+    "config": {
+        "flow_title": "{model} ({serial})",
+        "step": {
+            "user": {
+                "title": "Elero Transmitter Setup",
+                "description": "Configure your Elero transmitter.",
+                "data": {
+                    "name": "Transmitter Name",
+                    "address": "Transmitter Address",
+                    "timeout": "Timeout (sec.)",
+                    "baud_rate": "Baud Rate",
+                    "byte_size": "Byte Size",
+                    "parity": "Parity",
+                    "stop_bits": "Stop Bits"
+                }
+            },
+            "channels": {
+                "title": "Configure Channel {channel}",
+                "data": {
+                    "name": "Channel",
+                    "device_class": "Device Class",
+                    "supported_features": "Supported Features"
+                }
+            },
+            "usb_confirm": {
+                "title": "Elero Transmitter",
+                "description": "Successfully connected to the transmitter.\nYou will now be guided through the channel configuration.",
+                "connection_error": "Connection error. Please ensure the device is connected and the settings are correct."
+            }
+        },
+        "error": {
+            "address_exists": "A transmitter with this address already exists.",
+            "unknown": "Unknown error occurred."
+        }
+    },
+    "selector": {
+        "supported_features": {
+            "options": {
+                "close_tilt": "Close Tilt",
+                "down": "Down",
+                "open_tilt": "Open Tilt",
+                "set_position": "Set Position",
+                "set_tilt_position": "Set Tilt Position",
+                "stop_tilt": "Stop Tilt",
+                "stop": "Stop",
+                "up": "Up"
+            }
+        },
+        "device_class": {
+            "options": {
+                "blind": "Blind",
+                "shade": "Shade",
+                "shutter": "Shutter"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "channels": {
+                "title": "Serial configuration",
+                "init": {
+                    "baud_rate": "Baud Rate",
+                    "byte_size": "Byte Size",
+                    "parity": "Parity",
+                    "stop_bits": "Stop Bits",
+                    "timeout": "Timeout (seconds)"
+                }
+            }
+        }
+    },
+    "common": {
+        "default_channel_name": "Channel"
+    }
+}
