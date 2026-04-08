@@ -58,8 +58,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Close the serial port."""
         await coordinator.disconnect()
 
-    # Register the shutdown cleanup
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_serial_ports)
+    # Register the shutdown cleanup — tied to entry lifecycle so it's
+    # removed automatically on unload.
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_serial_ports)
+    )
 
     return True
 
@@ -96,5 +99,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry, [Platform.COVER]
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id, None)
+        coordinator = hass.data[DOMAIN].pop(entry.entry_id, None)
+        if coordinator:
+            await coordinator.disconnect()
     return unload_ok

@@ -16,6 +16,14 @@
     },
     "config": {
         "flow_title": "{model} ({serial})",
+        "abort": {
+            "already_configured": "Cet émetteur est déjà configuré."
+        },
+        "error": {
+            "connection_error": "Erreur de connexion. Assurez-vous que l'appareil est branché et que les paramètres sont corrects.",
+            "address_exists": "Un émetteur avec cette adresse existe déjà.",
+            "unknown": "Erreur inconnue."
+        },
         "step": {
             "user": {
                 "title": "Configuration de l'émetteur Elero",
@@ -39,14 +47,33 @@
                 }
             },
             "usb_confirm": {
-                "title": "Elero Transmitter",
-                "description": "Connexion réussie à l'émetteur.\nVous allez maintenant être guidé à travers la configuration des canaux.",
-                "connection_error": "Erreur de connexion. Assurez-vous que l'appareil est branché et que les paramètres sont corrects."
+                "title": "Configuration de l'émetteur Elero",
+                "description": "Configurez votre émetteur Elero (appareil : {serial}).",
+                "connection_error": "Erreur de connexion. Assurez-vous que l'appareil est branché et que les paramètres sont corrects.",
+                "data": {
+                    "name": "Nom de l'émetteur",
+                    "address": "Adresse de l'émetteur",
+                    "timeout": "Délai d'attente (s)",
+                    "baud_rate": "Baudrate",
+                    "byte_size": "Bits de données",
+                    "parity": "Parité",
+                    "stop_bits": "Bits d'arrêt"
+                }
             }
-        },
-        "error": {
-            "address_exists": "Un émetteur avec cette adresse existe déjà.",
-            "unknown": "Erreur inconnue."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Configuration série",
+                "data": {
+                    "baud_rate": "Baudrate",
+                    "byte_size": "Bits de données",
+                    "parity": "Parité",
+                    "stop_bits": "Bits d'arrêt",
+                    "timeout": "Délai d'attente (secondes)"
+                }
+            }
         }
     },
     "selector": {
@@ -67,20 +94,6 @@
                 "blind": "Store vénitien",
                 "shade": "Store",
                 "shutter": "Volet roulant"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "title": "Configuration série",
-                "data": {
-                    "baud_rate": "Baudrate",
-                    "byte_size": "Bits de données",
-                    "parity": "Parité",
-                    "stop_bits": "Bits d'arrêt",
-                    "timeout": "Délai d'attente (secondes)"
-                }
             }
         }
     },

@@ -45,7 +45,7 @@ from custom_components.elero.response.response import Response, ResponseStatus
 _LOGGER = logging.getLogger(__name__)
 
 
-class EleroTransmitter(object):
+class EleroTransmitter:
     """Representation of an Elero Centero USB Transmitter Stick.
 
     This class abstracts away connection management (serial or ser2net),
@@ -251,7 +251,7 @@ class EleroTransmitter(object):
 
         if duration > (0.8 * packet.get_response_timeout()):
             _LOGGER.warning(
-                "Low latency for channels %s on transmitter %s. %.1f seconds.",
+                "Slow response for channels %s on transmitter %s. %.1f seconds.",
                 command.get_channel_ids(),
                 self._serial_number,
                 duration,

@@ -11,7 +11,6 @@ Only documentation was added; functional behavior is unchanged.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -160,23 +159,28 @@ class EleroCover(CoordinatorEntity[EleroDataUpdateCoordinator], CoverEntity):
             features |= SUPPORTED_FEATURES[f]
         self._attr_supported_features = features
 
-    async def async_added_to_hass(self) -> None:
-        """Handle entity addition to Home Assistant.
+        # Initialize derived state attributes so they exist before the first
+        # coordinator update (HA reads them during entity registration).
+        self._attr_is_closed: bool | None = None
+        self._attr_is_opening: bool = False
+        self._attr_is_closing: bool = False
+        self._attr_current_cover_position: int | None = None
 
-        Subscribes to coordinator updates and ensures the entity state is kept
-        in sync after each refresh.
-        """
+    async def async_added_to_hass(self) -> None:
+        """Handle entity addition to Home Assistant."""
         await super().async_added_to_hass()
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._elero_update_listener)
-        )
 
     # ---------------------------------------------------------------------
     # Standard Cover behavior
     # ---------------------------------------------------------------------
     @property
-    def state(self):
-        """Return the state of the cover (CoverState enum in modern HA)."""
+    def state(self) -> str | None:
+        """Return the state of the cover.
+
+        Returns Elero-specific state strings (e.g. ``intermediate``,
+        ``ventilation_tilt``) that are resolved via the translation files,
+        or standard CoverState values for open/closed/opening/closing.
+        """
         cover_data = self._get_cover_data()
         if not cover_data:
             return None
@@ -196,17 +200,9 @@ class EleroCover(CoordinatorEntity[EleroDataUpdateCoordinator], CoverEntity):
         """Open the cover fully (maps to :data:`CommandType.UP`)."""
         await self._async_update_cover_cmd(CommandType.UP)
 
-    def open_cover(self, **kwargs) -> None:
-        """Compatibility wrapper that schedules :meth:`async_open_cover`."""
-        asyncio.create_task(self.async_open_cover(**kwargs))
-
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover fully (maps to :data:`CommandType.DOWN`)."""
         await self._async_update_cover_cmd(CommandType.DOWN)
-
-    def close_cover(self, **kwargs) -> None:
-        """Compatibility wrapper that schedules :meth:`async_close_cover`."""
-        asyncio.create_task(self.async_close_cover(**kwargs))
 
     async def async_stop_cover(self, **kwargs) -> None:
         """Stop any ongoing movement (maps to :data:`CommandType.STOP`)."""
@@ -298,7 +294,7 @@ class EleroCover(CoordinatorEntity[EleroDataUpdateCoordinator], CoverEntity):
             else POSITION_OPEN
         )
         req_position = position if position is not None else POSITION_OPEN
-        cmd = CommandType.UP if req_position >= current_pos else CommandType.DOWN
+        cmd = CommandType.UP if req_position > current_pos else CommandType.DOWN
         await self._async_update_cover_cmd(command_type=cmd, req_position=position)
 
     def _data_key(self) -> str:
@@ -313,7 +309,7 @@ class EleroCover(CoordinatorEntity[EleroDataUpdateCoordinator], CoverEntity):
         return data.get(self._data_key())
 
     @callback
-    def _elero_update_listener(self) -> None:
+    def _handle_coordinator_update(self) -> None:
         """Refresh entity attributes from coordinator data after each update.
 
         Also stops fast polling once the requested position is reached to reduce
@@ -321,8 +317,9 @@ class EleroCover(CoordinatorEntity[EleroDataUpdateCoordinator], CoverEntity):
         """
         cover_data = self._get_cover_data()
         if not cover_data:
+            super()._handle_coordinator_update()
             return
-        
+
         # Update derived attributes
         self._attr_is_closed = cover_data.closed
         self._attr_is_opening = cover_data.is_opening
@@ -333,4 +330,4 @@ class EleroCover(CoordinatorEntity[EleroDataUpdateCoordinator], CoverEntity):
         if self._request_position == cover_data.cover_position:
             self.coordinator.unregister_fast_channel(self._channel)
 
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()

@@ -16,10 +16,18 @@
     },
     "config": {
         "flow_title": "{model} ({serial})",
+        "abort": {
+            "already_configured": "Dieser Sender ist bereits konfiguriert."
+        },
+        "error": {
+            "connection_error": "Verbindungsfehler. Stellen Sie sicher, dass das Gerät angeschlossen ist und die Einstellungen korrekt sind.",
+            "address_exists": "Ein Sender mit dieser Adresse existiert bereits.",
+            "unknown": "Unbekannter Fehler aufgetreten."
+        },
         "step": {
             "user": {
-                "title": "Elero Sender Einrichtung",
-                "description": "Konfigurieren Sie Ihren Elero Sender.",
+                "title": "Elero Transmitter Einrichtung",
+                "description": "Konfigurieren Sie Ihren Elero Transmitter.",
                 "data": {
                     "name": "Sendername",
                     "address": "Senderadresse",
@@ -39,14 +47,33 @@
                 }
             },
             "usb_confirm": {
-                "title": "Elero Transmitter",
-                "description": "Erfolgreich mit Transmitter verbunden.\nSie werden nun durch die Kanal-Konfiguration geführt."
+                "title": "Elero Transmitter Einrichtung",
+                "description": "Konfigurieren Sie Ihren Elero Transmitter  (Gerät: {serial}).",
+                "data": {
+                    "name": "Sendername",
+                    "address": "Senderadresse",
+                    "timeout": "Zeitüberschreitung (Sek.)",
+                    "baud_rate": "Baudrate",
+                    "byte_size": "Datenbits",
+                    "parity": "Parität",
+                    "stop_bits": "Stoppbits"
+                }
             }
-        },
-        "error": {
-            "address_exists": "Ein Sender mit dieser Adresse existiert bereits.",
-            "unknown": "Unbekannter Fehler aufgetreten.",
-            "connection_error": "Verbindungsfehler. Stellen Sie sicher, dass das Gerät angeschlossen ist und die Einstellungen korrekt sind."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Serielle Konfiguration",
+                "description": "Passen Sie die Kommunikationseinstellungen an.",
+                "data": {
+                    "baud_rate": "Baudrate",
+                    "byte_size": "Datenbits",
+                    "parity": "Parität",
+                    "stop_bits": "Stoppbits",
+                    "timeout": "Timeout (Sekunden)"
+                }
+            }
         }
     },
     "selector": {
@@ -67,20 +94,6 @@
                 "blind": "Jalousie",
                 "shade": "Markise",
                 "shutter": "Rollladen"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "title": "Serielle Konfiguration",
-                "data": {
-                    "baud_rate": "Baudrate",
-                    "byte_size": "Datenbits",
-                    "parity": "Parität",
-                    "stop_bits": "Stoppbits",
-                    "timeout": "Timeout (Sekunden)"
-                }
             }
         }
     },

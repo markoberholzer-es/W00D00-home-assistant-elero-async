@@ -16,6 +16,14 @@
     },
     "config": {
         "flow_title": "{model} ({serial})",
+        "abort": {
+            "already_configured": "This transmitter is already configured."
+        },
+        "error": {
+            "connection_error": "Connection error. Please ensure the device is connected and the settings are correct.",
+            "address_exists": "A transmitter with this address already exists.",
+            "unknown": "Unknown error occurred."
+        },
         "step": {
             "user": {
                 "title": "Elero Transmitter Setup",
@@ -33,20 +41,39 @@
             "channels": {
                 "title": "Configure Channel {channel}",
                 "data": {
-                    "name": "Channel",
+                    "name": "Channel Name",
                     "device_class": "Device Class",
                     "supported_features": "Supported Features"
                 }
             },
             "usb_confirm": {
-                "title": "Elero Transmitter",
-                "description": "Successfully connected to the transmitter.\nYou will now be guided through the channel configuration.",
-                "connection_error": "Connection error. Please ensure the device is connected and the settings are correct."
+                "title": "Elero Transmitter Setup",
+                "description": "Configure your Elero transmitter (device: {serial}).",
+                "data": {
+                    "name": "Transmitter Name",
+                    "address": "Transmitter Address",
+                    "timeout": "Timeout (sec.)",
+                    "baud_rate": "Baud Rate",
+                    "byte_size": "Byte Size",
+                    "parity": "Parity",
+                    "stop_bits": "Stop Bits"
+                }
             }
-        },
-        "error": {
-            "address_exists": "A transmitter with this address already exists.",
-            "unknown": "Unknown error occurred."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Elero Options",
+                "description": "Adjust communication settings.",
+                "data": {
+                    "baud_rate": "Baud Rate",
+                    "byte_size": "Byte Size",
+                    "parity": "Parity",
+                    "stop_bits": "Stop Bits",
+                    "timeout": "Command Timeout (sec.)"
+                }
+            }
         }
     },
     "selector": {
@@ -67,20 +94,6 @@
                 "blind": "Blind",
                 "shade": "Shade",
                 "shutter": "Shutter"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "channels": {
-                "title": "Serial configuration",
-                "init": {
-                    "baud_rate": "Baud Rate",
-                    "byte_size": "Byte Size",
-                    "parity": "Parity",
-                    "stop_bits": "Stop Bits",
-                    "timeout": "Timeout (seconds)"
-                }
             }
         }
     },

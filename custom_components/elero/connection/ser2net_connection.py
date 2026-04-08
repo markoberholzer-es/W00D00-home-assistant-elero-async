@@ -36,6 +36,7 @@ class Ser2NetConnection(Connection):
         super().__init__(ser2net_config.address)
         self._address = ser2net_config.address
         self._url = f"socket://{ser2net_config.address}"
+        self._socket: socket.socket | None = None
         self._writer = None
         self._reader = None
 
@@ -53,32 +54,43 @@ class Ser2NetConnection(Connection):
                 host = parsed.hostname
                 port = parsed.port
                 # Precreate socket to apply options, then explicitly connect it
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.setblocking(False)
+                self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self._socket.setblocking(False)
                 try:
                     # Flush small telegrams immediately
-                    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-                except OSError:
+                    self._socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+                except Exception:
                     pass
                 try:
                     # Keepalives to detect half-open sessions
-                    sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-                except OSError:
+                    self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                except Exception:
                     pass
                 loop = asyncio.get_running_loop()
                 await loop.sock_connect(
-                    sock, (host, port)
+                    self._socket, (host, port)
                 )  # <-- crucial: actually connect
-                reader, writer = await asyncio.open_connection(sock=sock)
+                reader, writer = await asyncio.open_connection(sock=self._socket)
                 self._reader = reader
                 self._writer = writer
                 _LOGGER.debug("Ser2Net connection to %s:%s opened.", host, port)
-            except (OSError, ValueError) as ex:
-                await self.close()
-                _LOGGER.error(
+            except (Exception) as ex:
+                _LOGGER.debug(
                     "Failed to open Ser2Net connection to %s: %s", self._url, ex
                 )
-                raise
+                await self.close()
+                raise Ser2NetConnectionError(
+                    f"Failed to open Ser2Net connection to {self._url}"
+                ) from ex
+
+    async def close(self) -> None:
+        """Close the connections and release underlying resources.
+        """
+        await super().close()
+        _LOGGER.debug("Closing Ser2Net socket connection to %s...", self._url)
+        if self._socket:
+            self._socket.close()
+            self._socket = None
 
     @staticmethod
     def is_valid_url(url: str) -> bool:
@@ -95,3 +107,9 @@ class Ser2NetConnection(Connection):
         ):
             return True
         return False
+
+
+class Ser2NetConnectionError(Exception):
+    """Exception raised for ser2net connection errors."""
+
+    pass

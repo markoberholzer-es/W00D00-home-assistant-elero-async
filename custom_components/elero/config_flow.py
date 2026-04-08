@@ -30,12 +30,19 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TIMEOUT
 from homeassistant.core import callback
 from homeassistant.helpers import selector
+from homeassistant.helpers.selector import SelectSelectorMode
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.translation import async_get_translations
 
 from custom_components.elero.connection.config import Ser2NetConfig, SerialConfig
-from custom_components.elero.connection.ser2net_connection import Ser2NetConnection
-from custom_components.elero.connection.serial_connection import SerialConnection
+from custom_components.elero.connection.ser2net_connection import (
+    Ser2NetConnection,
+    Ser2NetConnectionError,
+)
+from custom_components.elero.connection.serial_connection import (
+    SerialConnection,
+    SerialConnectionError,
+)
 from custom_components.elero.const import (
     BAUD_RATE,
     BYTE_SIZE,
@@ -104,24 +111,28 @@ def build_data_schema(addresses: list[str], default_address: str) -> vol.Schema:
         if not (isinstance(k, vol.Marker) and k.schema == CONF_ADDRESS)
     }
 
-    # Prepare the new CONF_ADDRESS field
+    # Use SelectSelector with custom_value=True so the user can still type manually
     new_key = vol.Required(CONF_ADDRESS, default=default_address)
-    new_value = vol.In(addresses) if addresses else str
+    new_value = selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=[{"label": a, "value": a} for a in addresses],
+            custom_value=True,  # ← enables manual entry!
+            sort=True,
+            mode=SelectSelectorMode.DROPDOWN,  # looks like a dropdown, not radio buttons
+        )
+    )
 
-    # Get the desired order from OPTIONS_SCHEMA
+    # Maintain order from OPTIONS_SCHEMA
     desired_order = [k.schema for k in OPTIONS_SCHEMA.schema.keys()]
 
-    # Insert CONF_ADDRESS at the correct position
     new_base: dict[Any, Any] = {}
     inserted = False
     for k, v in base.items():
         if not inserted and isinstance(k, vol.Marker) and k.schema in desired_order:
-            # Insert CONF_ADDRESS before the first matching key from OPTIONS_SCHEMA
             new_base[new_key] = new_value
             inserted = True
         new_base[k] = v
 
-    # If not inserted yet, append at the end
     if not inserted:
         new_base[new_key] = new_value
 
@@ -159,8 +170,8 @@ async def validate_input(user_input: dict[str, Any]) -> dict[str, str] | None:
         # If open succeeds, try to get some info (serial, etc.)
         # For now, just return True; you can extend to actually read info if protocol allows
         await conn.close()
-    except OSError:
-        _LOGGER.exception("Connection error when trying to connect to Elero")
+    except (OSError, SerialConnectionError, Ser2NetConnectionError) as ex:
+        _LOGGER.debug("Connection error when trying to connect to Elero: %s", ex)
         errors = {"base": "connection_error"}
 
     return errors
@@ -191,10 +202,12 @@ async def get_channels(user_input: dict[str, Any]) -> list[int] | None:
         serial_config = SerialConfig(device=address, serial_number="unknown")
         transmitter = EleroTransmitter(serial_config=serial_config, ser2net_config=None)
 
-    await transmitter.async_open_serial()
-    await transmitter.async_check()
-    channels = transmitter.get_learned_channels()
-    await transmitter.async_close()
+    try:
+        await transmitter.async_open_serial()
+        await transmitter.async_check()
+        channels = transmitter.get_learned_channels()
+    finally:
+        await transmitter.async_close()
 
     return channels
 
@@ -308,6 +321,7 @@ class EleroConfigFlow(ConfigFlow, domain=DOMAIN):
         configured_addresses = [
             entry.data.get(CONF_ADDRESS, "") for entry in self._async_current_entries()
         ]
+
         available_addresses = [
             a for a in serial_devices.keys() if a not in configured_addresses
         ]
@@ -357,7 +371,7 @@ class EleroConfigFlow(ConfigFlow, domain=DOMAIN):
         number or device path), updates an existing entry if one is already
         present, and prepares base configuration for the confirm step.
         """
-        # give the discovery tile rich context
+
         self.context["title_placeholders"] = {
             "model": "Transmitter Stick",
             "serial": (discovery_info.serial_number or discovery_info.device),
@@ -366,12 +380,12 @@ class EleroConfigFlow(ConfigFlow, domain=DOMAIN):
         unique_id = discovery_info.serial_number or discovery_info.device
         await self.async_set_unique_id(unique_id, raise_on_progress=False)
 
-        # If already configured, just update the device path and abort the flow
+        # Abort if already configured
         self._abort_if_unique_id_configured(
             updates={CONF_ADDRESS: discovery_info.device}
         )
 
-        # Stash values for the confirm step and next stages
+        # Pre-populate configuration
         self._base_config = {
             CONF_NAME: "Elero Transmitter",
             CONF_ADDRESS: discovery_info.device,
@@ -382,9 +396,8 @@ class EleroConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_STOP_BITS: STOP_BITS,
         }
 
-        # Let the user confirm before we try to talk to the device
-        self._set_confirm_only()
-        return self.async_show_form(step_id="usb_confirm")
+        # Jump straight to editable confirmation step
+        return await self.async_step_usb_confirm()
 
     async def async_step_usb_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -395,19 +408,47 @@ class EleroConfigFlow(ConfigFlow, domain=DOMAIN):
         learned channels with :func:`get_channels` and proceeds to the channel
         wizard.
         """
+
+        # Get all available serial devices for dropdown population
+        serial_devices = await EleroTransmitter.async_get_serial_devices(self.hass)
+
+        # Remove already-configured addresses
+        configured_addresses = [
+            entry.data.get(CONF_ADDRESS, "") for entry in self._async_current_entries()
+        ]
+        available_addresses = [
+            a for a in serial_devices.keys() if a not in configured_addresses
+        ]
+
+        # Build schema (dropdown or free text) with default = discovered USB
+        data_schema = build_data_schema(
+            available_addresses, self._base_config[CONF_ADDRESS]
+        )
+
         if user_input is None:
-            return self.async_show_form(step_id="usb_confirm")
+            return self.async_show_form(
+                step_id="usb_confirm",
+                data_schema=data_schema,
+                description_placeholders={
+                    "serial": self._base_config[CONF_ADDRESS],
+                },
+            )
 
-        # Validate connectivity using your existing helper
-        errors = await validate_input(self._base_config)
+        # Validate connectivity
+        errors = await validate_input(user_input)
         if errors is not None:
-            # On error, abort with a generic reason the UI understands
-            return self.async_abort(reason=errors.get("base", "cannot_connect"))
+            return self.async_show_form(
+                step_id="usb_confirm",
+                data_schema=data_schema,
+                errors=errors,
+            )
 
-        # Discover learned channels and jump into your existing channel wizard
-        self._discovered_channels = await get_channels(self._base_config) or []
+        # Save and continue with channel discovery
+        self._base_config = user_input.copy()
+        self._discovered_channels = await get_channels(user_input) or []
         self._channels_config = []
         self._channel_idx = 0
+
         return await self.async_step_channels()
 
     @staticmethod

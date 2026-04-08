@@ -2,14 +2,14 @@
 layout: page
 title: "Elero Cover"
 description: "Instructions on how to integrate Elero covers into Home Assistant."
-date: 2025-10-15 10:00
+date: 2026-04-08 10:00
 sidebar: true
 comments: false
 sharing: true
 footer: true
 logo: elero.png
 ha_category: Cover
-ha_release: 0.9x
+ha_release: 1.0x
 ---
 
 
